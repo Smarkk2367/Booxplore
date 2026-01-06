@@ -1,51 +1,59 @@
 package com.example.booxplore.ui.home
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import com.example.booxplore.ui.navigation.detailRoute
-//for retrofit testing
-import android.util.Log
-import androidx.compose.runtime.LaunchedEffect
-import com.example.booxplore.data.repository.BookRepository
+import com.example.booxplore.ui.components.BookList
+import com.example.booxplore.ui.error.ErrorContent
 
 @Composable
 fun HomeScreen(
-    navController: NavController
+    viewModel: HomeViewModel,
+    onBookClick: (String) -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        val repo = BookRepository()
-        val result = repo.getFictionBooks()
-        result.onSuccess { books ->
-            Log.d("BOOKS", "Loaded ${books.size} books")
-            books.take(5).forEach { Log.d("BOOKS", it.title) }
-        }.onFailure { e ->
-            Log.e("BOOKS", "Failed to load books", e)
-        }
-    }
-    Column {
-        Text("Home Screen")
+    val state by viewModel.uiState.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
 
-        Spacer(modifier = Modifier.height(16.dp))
+    Column(modifier = Modifier.fillMaxSize()) {
 
-        Button(
-            onClick = {
-                navController.navigate(detailRoute("TEST_ID"))
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { 
+                searchQuery = it
+                viewModel.searchBooks(it) 
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            placeholder = { Text("Search books...") },
+            singleLine = true
+        )
+
+        Box(modifier = Modifier.weight(1f)) {
+            when {
+                state.isLoading -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                }
+
+                state.error != null -> {
+                    ErrorContent(
+                        message = state.error,
+                        onRetry = viewModel::loadBooks
+                    )
+                }
+
+                else -> {
+                    BookList(
+                        books = state.books,
+                        onBookClick = { book -> onBookClick(book.id) }
+                    )
+                }
             }
-        ) {
-            Text("Go to Detail")
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Button(onClick = { navController.navigate("favorites") }) {
-            Text("Go to Favorites")
         }
     }
 }
