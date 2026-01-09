@@ -12,12 +12,10 @@ enum class AppTheme {
 
 class ThemeManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("booxplore_theme", Context.MODE_PRIVATE)
-    
-    // Dark Mode
+
     private val _isDarkTheme = MutableStateFlow(prefs.getBoolean("is_dark_mode", false))
     val isDarkTheme: StateFlow<Boolean> = _isDarkTheme.asStateFlow()
 
-    // Theme Style
     private val _currentTheme = MutableStateFlow(
         AppTheme.valueOf(prefs.getString("app_theme", AppTheme.DEFAULT.name) ?: AppTheme.DEFAULT.name)
     )

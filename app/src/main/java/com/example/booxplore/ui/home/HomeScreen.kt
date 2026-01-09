@@ -2,6 +2,7 @@ package com.example.booxplore.ui.home
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,7 +33,12 @@ fun HomeScreen(
             singleLine = true
         )
 
-        Box(modifier = Modifier.weight(1f)) {
+        @OptIn(ExperimentalMaterial3Api::class)
+        PullToRefreshBox(
+            isRefreshing = state.isRefreshing,
+            onRefresh = viewModel::refresh,
+            modifier = Modifier.weight(1f)
+        ) {
             when {
                 state.isLoading -> {
                     CircularProgressIndicator(

@@ -82,7 +82,6 @@ fun SettingsScreen(
     }
 }
 
-// Helper extension for capitalizing enum names
 private fun String.capitalize(): String {
     return this.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 }
