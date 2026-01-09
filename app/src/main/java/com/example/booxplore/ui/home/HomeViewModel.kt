@@ -15,52 +15,75 @@ class HomeViewModel(
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private var currentQuery: String? = null
+
     init {
         loadBooks()
     }
 
-    fun loadBooks() {
+    fun loadBooks(isRefreshing: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = HomeUiState(isLoading = true)
+            _uiState.value = _uiState.value.copy(
+                isLoading = !isRefreshing,
+                isRefreshing = isRefreshing
+            )
 
             repository.getFictionBooks()
                 .onSuccess { books ->
                     _uiState.value = HomeUiState(
                         books = books,
-                        isLoading = false
+                        isLoading = false,
+                        isRefreshing = false
                     )
+                    currentQuery = null
                 }
                 .onFailure {
-                    _uiState.value = HomeUiState(
+                    _uiState.value = _uiState.value.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         error = "Couldn't load data"
                     )
                 }
         }
     }
 
-    fun searchBooks(query: String) {
+    fun searchBooks(query: String, isRefreshing: Boolean = false) {
         if (query.isBlank()) {
-            loadBooks()
+            loadBooks(isRefreshing)
             return
         }
         
+        currentQuery = query
         viewModelScope.launch {
-            _uiState.value = HomeUiState(isLoading = true)
+            _uiState.value = _uiState.value.copy(
+                isLoading = !isRefreshing,
+                isRefreshing = isRefreshing
+            )
             
             repository.searchBooks(query)
                 .onSuccess { books ->
                     _uiState.value = HomeUiState(
                         books = books,
-                        isLoading = false
+                        isLoading = false,
+                        isRefreshing = false
                     )
                 }
                 .onFailure {
-                    _uiState.value = HomeUiState(
+                    _uiState.value = _uiState.value.copy(
                         isLoading = false,
+                        isRefreshing = false,
                         error = "Search failed"
                     )
                 }
+        }
+    }
+
+    fun refresh() {
+        val query = currentQuery
+        if (query != null) {
+            searchBooks(query, isRefreshing = true)
+        } else {
+            loadBooks(isRefreshing = true)
         }
     }
 }
